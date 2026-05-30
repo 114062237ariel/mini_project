@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic -g -O3 -march=native
+CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic -g -O3 
 
 SOURCES_DIR = src
 UNITTEST_DIR = unittest

@@ -73,10 +73,7 @@ int MiniMax::eval_ctx(
         
         // [Hackathon TODO 3-4]
         // convert raw to the current player's perspective.
-        int score = same? raw:-raw;
-
-        delete next;
-
+        int score = same? raw:-raw; 
         // [ Hackathon TODO 3-5 ]
         // update best_score if this child is better.
         if(score>best_score){

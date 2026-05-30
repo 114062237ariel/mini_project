@@ -108,6 +108,7 @@ int State::evaluate(
                 if(self_board[i][j]){
                     int sp = self_board[i][j];
                     self_score += kp_material[sp];
+                    
                     if(oppn_kr!=-1){
                         self_score += king_tropism(sp,i,j,oppn_kr,oppn_kc);
                     }
@@ -115,6 +116,7 @@ int State::evaluate(
                 if(oppn_board[i][j]){
                     int op = oppn_board[i][j];
                     oppn_score += kp_material[op];
+                    
                     if(self_kr!=-1){
                         oppn_score += king_tropism(op,i,j,self_kr,self_kc);
                     }
