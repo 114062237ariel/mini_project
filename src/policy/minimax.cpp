@@ -101,14 +101,14 @@ int MiniMax::eval_ctx(
  *
  * Iterate legal moves, call eval_ctx, return SearchResult.
  *============================================================*/
-int alpha = M_MAX;
-int beta = P_MAX;
 SearchResult MiniMax::search(
     State *state,
     int depth,
     GameHistory& history,
     SearchContext& ctx
 ){
+    int alpha = M_MAX;
+    int beta = P_MAX;
     ctx.reset();
     MMParams p = MMParams::from_map(ctx.params);
     SearchResult result;

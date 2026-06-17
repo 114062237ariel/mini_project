@@ -50,9 +50,15 @@ int PVS::eval_ctx(
     history.push(state->hash());
 
     if(depth <= 0){
-        int score = state->evaluate(
-            p.use_kp_eval, p.use_eval_mobility, &history
-        ); 
+        int score = quiescence(
+            state,
+            history,
+            ctx,
+            p,
+            alpha,
+            beta
+        );
+
         history.pop(state->hash());
         return score;
     }
@@ -101,7 +107,7 @@ int PVS::eval_ctx(
 
             int score_test = same ? raw : -raw;
 
-            if(score_test > alpha){
+            if(score_test > alpha && score_test < beta){
 
                 raw = eval_ctx(
                     next,
@@ -137,7 +143,74 @@ int PVS::eval_ctx(
     history.pop(state->hash());
     return best_score;
 }
+/*============================================================
+ * PVS — quiescence
+ *============================================================*/
+int PVS::quiescence(
+    State *state,
+    GameHistory& history,
+    SearchContext& ctx,
+    const MMParams& p,
+    int alpha,
+    int beta
+){
+    ctx.nodes++;
 
+    int stand_pat = state->evaluate(
+        p.use_kp_eval,
+        p.use_eval_mobility,
+        &history
+    );
+
+    if(stand_pat >= beta){
+        return beta;
+    }
+
+    if(stand_pat > alpha){
+        alpha = stand_pat;
+    }
+
+    if(state->legal_actions.empty() && state->game_state == UNKNOWN){
+        state->get_legal_actions();
+    }
+
+    int opp = 1 - state->player;
+
+    for(auto& action : state->legal_actions){
+        int tr = action.second.first;
+        int tc = action.second.second;
+
+        // 只搜尋吃子
+        if(state->board.board[opp][tr][tc] == 0){
+            continue;
+        }
+
+        State *next = state->next_state(action);
+
+        int raw = quiescence(
+            next,
+            history,
+            ctx,
+            p,
+            -beta,
+            -alpha
+        );
+
+        int score = -raw;
+
+        delete next;
+
+        if(score >= beta){
+            return beta;
+        }
+
+        if(score > alpha){
+            alpha = score;
+        }
+    }
+
+    return alpha;
+}
 
 /*============================================================
  * MiniMax — search

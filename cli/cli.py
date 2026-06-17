@@ -45,7 +45,7 @@ def _init_game(game_name: str, board_size: int | None = None) -> None:
     _game_ctx.update(_minichess_ctx())
 
 
-ALGO_CHOICES = ["minimax", "random"]
+ALGO_CHOICES = ["minimax", "random","pvs"]
 
 # ---------------------------------------------------------------------------
 # Board display (game-specific)
