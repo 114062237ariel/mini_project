@@ -16,7 +16,7 @@ struct MMParams {
     }
 };
 
-class MiniMax{
+class PVS{
 public:
     static int eval_ctx(
         State *state,

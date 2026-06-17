@@ -15,6 +15,7 @@
 #include "game_history.hpp"
 #include "minimax.hpp"
 #include "random.hpp"
+#include "pvs.hpp"
 
 struct AlgoEntry {
     std::string name;
@@ -41,6 +42,14 @@ inline const std::vector<AlgoEntry>& get_algo_table(){
                 return Random::search(s, d, h, c);
             }
         },
+        {
+            "pvs",
+            PVS::default_params(),
+            PVS::param_defs(),
+            [](State* s, int d, GameHistory& h, SearchContext& c){
+                return PVS::search(s, d, h, c);
+            }
+        }
     };
     return table;
 }
@@ -54,4 +63,4 @@ inline const AlgoEntry* find_algo(const std::string& name){
     return nullptr;
 }
 
-inline std::string default_algo_name(){ return "minimax"; }
+inline std::string default_algo_name(){ return "pvs"; }

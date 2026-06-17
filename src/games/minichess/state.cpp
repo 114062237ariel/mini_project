@@ -107,7 +107,16 @@ int State::evaluate(
             for(int j=0;j<BOARD_W;j++){
                 if(self_board[i][j]){
                     int sp = self_board[i][j];
+                    //pawn advancement bonus
+                    if(sp==1){
+                        self_score += (BOARD_H-1-i)*5;
+                    }
                     self_score += kp_material[sp];
+
+                    //consider pst
+                    if(sp<=6){
+                        self_score += pst[sp-1][i][j];
+                    }
                     
                     if(oppn_kr!=-1){
                         self_score += king_tropism(sp,i,j,oppn_kr,oppn_kc);
@@ -115,7 +124,14 @@ int State::evaluate(
                 }
                 if(oppn_board[i][j]){
                     int op = oppn_board[i][j];
+                    if(op==1){
+                        oppn_score += i*5;
+                    }
                     oppn_score += kp_material[op];
+
+                    if(op<=6){
+                        oppn_score += pst[op-1][BOARD_H-1-i][j];
+                    }
                     
                     if(self_kr!=-1){
                         oppn_score += king_tropism(op,i,j,self_kr,self_kc);
@@ -134,9 +150,11 @@ int State::evaluate(
                 int o_piece = oppn_board[i][j];
                 if(s_piece){
                     self_score += simple_material[s_piece];
+                    self_score += pst[s_piece-1][i][j];
                 }
                 if(o_piece){
                     oppn_score += simple_material[o_piece];
+                    oppn_score += pst[o_piece-1][BOARD_H-1-i][j];
                 }
             }
         }
@@ -156,7 +174,7 @@ int State::evaluate(
         oppn.player = 1-player;//?
         oppn.get_legal_actions();
         int om = oppn.legal_actions.size();
-        bonus += 2*(sm-om);
+        bonus += 3*(sm-om);
 
     }
 

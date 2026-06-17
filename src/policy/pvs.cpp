@@ -1,14 +1,12 @@
 #include <utility>
 #include "state.hpp"
-#include "minimax.hpp"
+#include "pvs.hpp"
 
 
 /*============================================================
- * MiniMax — eval_ctx
- *
- * Negamax without pruning. Caller manages memory.
+ * PVS — eval_ctx
  *============================================================*/
-int MiniMax::eval_ctx(
+int PVS::eval_ctx(
     State *state,
     int depth,
     GameHistory& history,
@@ -61,7 +59,7 @@ int MiniMax::eval_ctx(
 
     /* === Negamax loop === */
     int best_score = M_MAX;
-
+    bool first = true;
     for(auto& action : state->legal_actions){
         // [ Hackathon TODO 3-2 ]
         // create the child state after applying action
@@ -71,7 +69,52 @@ int MiniMax::eval_ctx(
 
         // [Hackathon TODO 3-3]
         // search the child one level deeper
-        int raw = eval_ctx(next,depth-1,history,ply+1,ctx,p,-beta,-alpha);
+        int raw;
+
+        if(first){
+
+            raw = eval_ctx(
+                next,
+                depth-1,
+                history,
+                ply+1,
+                ctx,
+                p,
+                -beta,
+                -alpha
+            );
+
+            first = false;
+        }
+        else{
+
+            raw = eval_ctx(
+                next,
+                depth-1,
+                history,
+                ply+1,
+                ctx,
+                p,
+                -alpha-1,
+                -alpha
+            );
+
+            int score_test = same ? raw : -raw;
+
+            if(score_test > alpha){
+
+                raw = eval_ctx(
+                    next,
+                    depth-1,
+                    history,
+                    ply+1,
+                    ctx,
+                    p,
+                    -beta,
+                    -alpha
+                );
+            }
+        }
         
         // [Hackathon TODO 3-4]
         // convert raw to the current player's perspective.
@@ -101,14 +144,15 @@ int MiniMax::eval_ctx(
  *
  * Iterate legal moves, call eval_ctx, return SearchResult.
  *============================================================*/
-int alpha = M_MAX;
-int beta = P_MAX;
-SearchResult MiniMax::search(
+
+SearchResult PVS::search(
     State *state,
     int depth,
     GameHistory& history,
     SearchContext& ctx
-){
+){ 
+    int alpha = M_MAX;
+    int beta = P_MAX;
     ctx.reset();
     MMParams p = MMParams::from_map(ctx.params);
     SearchResult result;
@@ -128,7 +172,7 @@ SearchResult MiniMax::search(
          * search this move like TODO 3, but starting from the root */
             State *next = state->next_state(action);
             bool same = next->same_player_as_parent();
-            int raw = eval_ctx(next,depth-1,history,1,ctx,p,M_MAX,P_MAX);//root,ply->1
+            int raw = eval_ctx(next,depth-1,history,1,ctx,p,alpha,beta);//root,ply->1
             int score = same? raw:-raw;
             delete next;
             if(score > best_score){
@@ -145,6 +189,7 @@ SearchResult MiniMax::search(
                 alpha = score;
             }
         move_index++;
+        
     }
 
     // [ Hackathon TODO 4-3 ]
@@ -155,16 +200,14 @@ SearchResult MiniMax::search(
         result.seldepth = ctx.seldepth;
         result.pv = {result.best_move};
 
-        
-
         return result;
 } 
 
 
 /*============================================================
- * MiniMax — default_params / param_defs
+ * PVS — default_params / param_defs
  *============================================================*/
-ParamMap MiniMax::default_params(){
+ParamMap PVS::default_params(){
     return {
         {"UseKPEval", "true"},
         {"UseEvalMobility", "true"},
@@ -172,7 +215,7 @@ ParamMap MiniMax::default_params(){
     };
 }
 
-std::vector<ParamDef> MiniMax::param_defs(){
+std::vector<ParamDef> PVS::param_defs(){
     return {
         {"UseKPEval", ParamDef::CHECK, "true"},
         {"UseEvalMobility", ParamDef::CHECK, "true"},
