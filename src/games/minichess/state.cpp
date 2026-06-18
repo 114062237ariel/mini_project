@@ -109,7 +109,19 @@ int State::evaluate(
                     int sp = self_board[i][j];
                     //pawn advancement bonus
                     if(sp==1){
-                        self_score += (BOARD_H-1-i)*5;
+                        self_score += (BOARD_H-1-i)*15;
+                        bool passed = true;
+
+                        for(int r = i-1; r >= 0; r--){
+                            if(oppn_board[r][j] == 1){
+                                passed = false;
+                                break;
+                            }
+                        }
+
+                        if(passed){
+                            self_score += 50;
+                        }
                     }
                     self_score += kp_material[sp];
 
@@ -125,7 +137,20 @@ int State::evaluate(
                 if(oppn_board[i][j]){
                     int op = oppn_board[i][j];
                     if(op==1){
-                        oppn_score += i*5;
+                        oppn_score += i*15;
+
+                        bool passed = true;
+
+                        for(int r=i+1; r<BOARD_H; r++){
+                            if(self_board[r][j] == 1){
+                                passed = false;
+                                break;
+                            }
+                        }
+
+                        if(passed){
+                            oppn_score += 50;
+                        }
                     }
                     oppn_score += kp_material[op];
 
@@ -174,7 +199,7 @@ int State::evaluate(
         oppn.player = 1-player;//?
         oppn.get_legal_actions();
         int om = oppn.legal_actions.size();
-        bonus += 3*(sm-om);
+        bonus += 10*(sm-om);
 
     }
 

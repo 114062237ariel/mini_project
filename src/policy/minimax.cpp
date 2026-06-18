@@ -108,7 +108,7 @@ SearchResult MiniMax::search(
     SearchContext& ctx
 ){
     int alpha = M_MAX;
-    int beta = P_MAX;
+    //int beta = P_MAX;
     ctx.reset();
     MMParams p = MMParams::from_map(ctx.params);
     SearchResult result;
