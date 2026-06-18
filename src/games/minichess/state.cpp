@@ -62,150 +62,64 @@ static int king_tropism(
  * evaluate() — runtime-selectable eval strategy
  *============================================================*/
 
-int State::evaluate(
-    bool use_kp_eval,
-    bool use_mobility,
-    const GameHistory* history
-){
-    (void)history; // just to suppress warning
+int State::evaluate(bool use_kp_eval, bool use_mobility, const GameHistory* history){
+    (void)history;
+    if(game_state == WIN) return P_MAX;          
 
-    // [ Hackathon TODO 1-1 ]
-    // if in win state, return max score(you can check base_state.hpp for max score)
-    if(game_state==WIN){
-        return P_MAX;
+    const auto& wb = this->board.board[0];        
+    const auto& bb = this->board.board[1];        
+    const int* material = use_kp_eval ? kp_material : simple_material;
+
+    int wkr=-1,wkc=-1, bkr=-1,bkc=-1;
+    for(int i=0;i<BOARD_H;i++) for(int j=0;j<BOARD_W;j++){
+        if(wb[i][j]==6){ wkr=i; wkc=j; }
+        if(bb[i][j]==6){ bkr=i; bkc=j; }
     }
-    
-    auto self_board = this->board.board[this->player];
-    auto oppn_board = this->board.board[1 - this->player];
-    int self_score = 0, oppn_score = 0;
 
-    if(use_kp_eval){
-        /* === KP eval: material + PST + tropism === */
-
-        int self_kr = -1, self_kc = -1;
-        int oppn_kr = -1, oppn_kc = -1;
-        // [ Hackathon TODO 1-3 ]
-        // get the position for player's king and opponent's king
-        for(int i=0;i<BOARD_H;i++){
-            for(int j=0;j<BOARD_W;j++){
-                if(self_board[i][j]==6){
-                    self_kr = i;
-                    self_kc = j;
-                }
-                if(oppn_board[i][j]==6){
-                    oppn_kr = i;
-                    oppn_kc = j;
+    int white=0, black=0;
+    for(int i=0;i<BOARD_H;i++){
+        for(int j=0;j<BOARD_W;j++){
+            int wp=wb[i][j], bp=bb[i][j];
+            if(wp){
+                white += material[wp] + pst[wp-1][i][j];         
+                if(use_kp_eval){
+                    if(wp==1){
+                        white += (BOARD_H-1-i)*15;                
+                        bool passed=true;
+                        for(int r=i-1;r>=0&&passed;r--)
+                            for(int c=std::max(0,j-1);c<=std::min(BOARD_W-1,j+1);c++)
+                                if(bb[r][c]==1){ passed=false; break; }
+                        if(passed) white += 50;
+                    }
+                    if(bkr!=-1) white += king_tropism(wp,i,j,bkr,bkc);
                 }
             }
-        }
-
-        // [ Hackathon TODO 1-4 ]
-        // sum player/opponent pieces' value and add to score
-        // if enemy king is still on the board, you should also call king_tropism for your pieces and add the value to score
-        // king_tropism is already given above
-        for(int i=0;i<BOARD_H;i++){
-            for(int j=0;j<BOARD_W;j++){
-                if(self_board[i][j]){
-                    int sp = self_board[i][j];
-                    //pawn advancement bonus
-                    if(sp==1){
-                        self_score += (BOARD_H-1-i)*15;
-                        bool passed = true;
-
-                        for(int r = i-1; r >= 0; r--){
-                            if(oppn_board[r][j] == 1){
-                                passed = false;
-                                break;
-                            }
-                        }
-
-                        if(passed){
-                            self_score += 50;
-                        }
+            if(bp){
+                black += material[bp] + pst[bp-1][BOARD_H-1-i][j]; 
+                if(use_kp_eval){
+                    if(bp==1){
+                        black += i*15;                             
+                        bool passed=true;
+                        for(int r=i+1;r<BOARD_H&&passed;r++)
+                            for(int c=std::max(0,j-1);c<=std::min(BOARD_W-1,j+1);c++)
+                                if(wb[r][c]==1){ passed=false; break; }
+                        if(passed) black += 50;
                     }
-                    self_score += kp_material[sp];
-
-                    //consider pst
-                    if(sp<=6){
-                        self_score += pst[sp-1][i][j];
-                    }
-                    
-                    if(oppn_kr!=-1){
-                        self_score += king_tropism(sp,i,j,oppn_kr,oppn_kc);
-                    }
-                }
-                if(oppn_board[i][j]){
-                    int op = oppn_board[i][j];
-                    if(op==1){
-                        oppn_score += i*15;
-
-                        bool passed = true;
-
-                        for(int r=i+1; r<BOARD_H; r++){
-                            if(self_board[r][j] == 1){
-                                passed = false;
-                                break;
-                            }
-                        }
-
-                        if(passed){
-                            oppn_score += 50;
-                        }
-                    }
-                    oppn_score += kp_material[op];
-
-                    if(op<=6){
-                        oppn_score += pst[op-1][BOARD_H-1-i][j];
-                    }
-                    
-                    if(self_kr!=-1){
-                        oppn_score += king_tropism(op,i,j,self_kr,self_kc);
-                    }
-                }
-            }
-        }
-
-    }else{
-        /* === Simple material-only eval === */
-        // [ Hackathon TODO 1-2 ]
-        // Simply add each piece's value to score
-        for(int i=0;i<BOARD_H;i++){
-            for(int j=0;j<BOARD_W;j++){
-                int s_piece = self_board[i][j];
-                int o_piece = oppn_board[i][j];
-                if(s_piece){
-                    self_score += simple_material[s_piece];
-                    self_score += pst[s_piece-1][i][j];
-                }
-                if(o_piece){
-                    oppn_score += simple_material[o_piece];
-                    oppn_score += pst[o_piece-1][BOARD_H-1-i][j];
+                    if(wkr!=-1) black += king_tropism(bp,i,j,wkr,wkc);
                 }
             }
         }
     }
 
-    int bonus = 0;
+    int score = (this->player==0) ? (white-black) : (black-white);
 
-    /* === Mobility bonus === */
     if(use_mobility){
-        // [ Hackathon TODO 1-5 ]
-        // you can calculate mobility by legal actions size
-        // bonus += 2 * (self_mobility - oppn_mobility);
-        State self = *this;
-        self.get_legal_actions();
-        int sm = self.legal_actions.size();
-        State oppn = *this;
-        oppn.player = 1-player;//?
-        oppn.get_legal_actions();
-        int om = oppn.legal_actions.size();
-        bonus += 10*(sm-om);
-
+        State tmp=*this; tmp.get_legal_actions();
+        State opp=*this; opp.player=1-this->player; opp.get_legal_actions();
+        score += 10*((int)tmp.legal_actions.size() - (int)opp.legal_actions.size());
     }
-
-    return self_score - oppn_score + bonus;
+    return score;
 }
-
 
 
 /*============================================================
