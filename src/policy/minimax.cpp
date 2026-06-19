@@ -16,7 +16,7 @@
  *     Keep margin for unwinding + encoding + stdout flush -> 1800ms.
  *     If your ubgi.c passes the movetime, drive this from it instead. */
 static std::chrono::steady_clock::time_point g_search_start;
-static double SEARCH_LIMIT_MS = 1800.0;
+static double SEARCH_LIMIT_MS = 1900.0;
 
 static inline bool time_up(){
     return std::chrono::duration<double, std::milli>(
@@ -68,6 +68,7 @@ static inline void tt_store(uint64_t key,int depth,int score,uint8_t flag,const 
 static inline bool is_capture(State* s, const Move& m){
     return s->board.board[1 - s->player][m.second.first][m.second.second] != 0;
 }
+
 static inline int from_sq(const Move& m){ return m.first.first  * BOARD_W + m.first.second;  }
 static inline int to_sq  (const Move& m){ return m.second.first * BOARD_W + m.second.second; }
 
@@ -243,7 +244,7 @@ SearchResult MiniMax::search(State *state, int depth, GameHistory& history, Sear
     result.best_move = state->legal_actions[0];
     result.score = 0;
 
-    int max_d = (depth>0 && depth<MAX_PLY) ? depth : (MAX_PLY-1);
+    int max_d = MAX_PLY-1;
     int total = (int)state->legal_actions.size();
 
     for(int d = 1; d <= max_d; ++d){
