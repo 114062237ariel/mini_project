@@ -64,10 +64,10 @@ static int king_tropism(
 
 int State::evaluate(bool use_kp_eval, bool use_mobility, const GameHistory* history){
     (void)history;
-    if(game_state == WIN) return P_MAX;          
+    if(game_state == WIN) return P_MAX;
 
-    const auto& wb = this->board.board[0];        
-    const auto& bb = this->board.board[1];        
+    const auto& wb = this->board.board[0];        // 白(絕對座標)
+    const auto& bb = this->board.board[1];        // 黑(絕對座標)
     const int* material = use_kp_eval ? kp_material : simple_material;
 
     int wkr=-1,wkc=-1, bkr=-1,bkc=-1;
@@ -81,10 +81,10 @@ int State::evaluate(bool use_kp_eval, bool use_mobility, const GameHistory* hist
         for(int j=0;j<BOARD_W;j++){
             int wp=wb[i][j], bp=bb[i][j];
             if(wp){
-                white += material[wp] + pst[wp-1][i][j];         
+                white += material[wp] + pst[wp-1][i][j];           // 白:不鏡射
                 if(use_kp_eval){
                     if(wp==1){
-                        white += (BOARD_H-1-i)*15;                
+                        white += (BOARD_H-1-i)*15;
                         bool passed=true;
                         for(int r=i-1;r>=0&&passed;r--)
                             for(int c=std::max(0,j-1);c<=std::min(BOARD_W-1,j+1);c++)
@@ -95,10 +95,10 @@ int State::evaluate(bool use_kp_eval, bool use_mobility, const GameHistory* hist
                 }
             }
             if(bp){
-                black += material[bp] + pst[bp-1][BOARD_H-1-i][j]; 
+                black += material[bp] + pst[bp-1][BOARD_H-1-i][j];  // 黑:鏡射
                 if(use_kp_eval){
                     if(bp==1){
-                        black += i*15;                             
+                        black += i*15;
                         bool passed=true;
                         for(int r=i+1;r<BOARD_H&&passed;r++)
                             for(int c=std::max(0,j-1);c<=std::min(BOARD_W-1,j+1);c++)
