@@ -618,11 +618,11 @@ void State::get_legal_actions_bitboard(){
  * Dispatcher
  *============================================================*/
 void State::get_legal_actions(){
-    #ifdef USE_BITBOARD
+    //#ifdef USE_BITBOARD
     get_legal_actions_bitboard();
-    #else
-    get_legal_actions_naive();
-    #endif
+    //#else
+    //get_legal_actions_naive();
+    //#endif
 }
 
 
